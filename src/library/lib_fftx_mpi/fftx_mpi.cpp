@@ -373,7 +373,7 @@ void fftx_mpi_rcperm(fftx_plan plan, double * _Y, double *_X, int stage, bool is
         // [yl, yr, (zl, xl)] -> [yl, (zl, xl), yr]
         // [yl, zl, xl, yr] -> [yl, zl, xl, xr]
 #if CUDA_AWARE_MPI
-        unpack_embed(plan, plan->send_buffer, X, plan->b * plan->shape[2], plan->shape[4] * plan->shape[0], plan->shape[3], plan->b, is_embedded);
+        unpack_embed(plan, plan->send_buffer, X, plan->b * plan->shape[2], plan->shape[4] * plan->shape[0], plan->shape[3], is_embedded);
         MPI_Alltoall(
 	        plan->send_buffer, sendSize*plan->b,
           MPI_DOUBLE_COMPLEX,
@@ -406,7 +406,7 @@ void fftx_mpi_rcperm(fftx_plan plan, double * _Y, double *_X, int stage, bool is
         // [xl, xr, (yl, zl)] -> [xl, (yl, zl), xr]
         // [xl, yl, zl, xr] -> [xl, yl, zl, zr]
 #if CUDA_AWARE_MPI
-        unpack_embed(plan, plan->send_buffer, X, plan->b * plan->shape[0], plan->shape[2] * plan->shape[4], plan->shape[1], plan->b, is_embedded);
+        unpack_embed(plan, plan->send_buffer, X, plan->b * plan->shape[0], plan->shape[2] * plan->shape[4], plan->shape[1], is_embedded);
         MPI_Alltoall(
           plan->send_buffer, sendSize*plan->b,
           MPI_DOUBLE_COMPLEX,
