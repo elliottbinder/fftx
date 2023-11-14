@@ -24,7 +24,29 @@ using namespace std;
 
 #define CPU_PERMUTE 0     //Todo: Fix CPU PERMUTE to work with batch + embedded
 #define CUDA_AWARE_MPI 0
-#define FORCE_VENDOR_LIB 0
+#define FORCE_VENDOR_LIB 1
+
+#define PROFILING 1
+#define PROFILING_INIT() \
+  int rank; \
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank); \
+  double start, stop, max_time;
+
+#if PROFILING
+#define PROFILE_START() \
+    start = MPI_Wtime();
+#else
+#define PROFILE_START() ;
+#endif
+
+#if PROFILING
+#define PROFILE_STOP() \
+    stop = MPI_Wtime(); \
+    max_time = max_diff(start, stop, MPI_COMM_WORLD); \
+    if (rank == 0) { printf("%f,", max_time); }
+#else
+#define PROFILE_STOP() ;
+#endif
 
 // implement on GPU.
 // [A, B, C] -> [B, A, C]

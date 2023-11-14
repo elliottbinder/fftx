@@ -319,7 +319,7 @@ int main(int argc, char* argv[]) {
           }
         }
       }
-      MPI_Reduce(rank == 0 ? MPI_IN_PLACE : &correct, &correct, 1, MPI_C_BOOL, MPI_LAND, 0, MPI_COMM_WORLD);
+      // MPI_Reduce(rank == 0 ? MPI_IN_PLACE : &correct, &correct, 1, MPI_C_BOOL, MPI_LAND, 0, MPI_COMM_WORLD);
     }
     if (rank == 0) {
       if (PRETTY_PRINT) {

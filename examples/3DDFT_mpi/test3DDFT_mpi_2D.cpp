@@ -147,7 +147,8 @@ int main(int argc, char* argv[]) {
     cout << "Grid size       : " << r << " x " << c << endl;
   }
 
-  for (int t = 0; t < 3; t++) {
+  // TODO: add trials to command line argument?
+  for (int t = 0; t < 5; t++) {
 
     double start_time = MPI_Wtime();
 
@@ -162,15 +163,15 @@ int main(int argc, char* argv[]) {
     DEVICE_SYNCHRONIZE();
 
     if (commRank == 0) {
-      // cout<<endl<<"end_to_end," << max_time<<endl;
-      cout<<endl;
+      cout << endl << "end_to_end," << max_time << endl;
+      // cout<<endl;
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
 
   // for (int rank = 0; rank < p; ++rank){
   for (int rank = 0; rank < 1; ++rank){
-    if (rank == commRank){
+    if (rank == commRank) {
       cout<<commRank<<": ";
 
       /*

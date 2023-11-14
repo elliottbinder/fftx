@@ -182,11 +182,12 @@ void fftx_execute_1d_default(
   double * out_buffer, double * in_buffer,
   int direction
 ) {
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PROFILING_INIT();
 
   if (direction == DEVICE_FFT_FORWARD) {
     if (plan->is_complex) {
+
+      PROFILE_START();
       // [X', ceil(Z/p), Y, b] <= [ceil(Z/p), Y, X, b]
       for (size_t b = 0; b < plan->b; b++) {
         DEVICE_FFT_EXECZ2Z(
@@ -196,12 +197,16 @@ void fftx_execute_1d_default(
           direction
         );
       }
+      PROFILE_STOP();
 
+      PROFILE_START();
       // [ceil(X'/px), pz, ceil(Z/pz), Y, b] <= [px, ceil(X'/px), ceil(Z/pz), Y, b]
       fftx_mpi_rcperm_1d(plan, plan->Q4, plan->Q3, FFTX_MPI_EMBED_1, plan->is_embed);
+      PROFILE_STOP();
 
+      PROFILE_START();
+      // [Y, ceil(X'/px), pz, ceil(Z/pz), b] <= [ceil(X'/px), pz, ceil(Z/pz), Y, b]
       for (size_t b = 0; b < plan->b; ++b) {
-        // [Y, ceil(X'/px), pz, ceil(Z/pz), b] <= [ceil(X'/px), pz, ceil(Z/pz), Y, b]
         DEVICE_FFT_EXECZ2Z(
           plan->stg2,
           ((DEVICE_FFT_DOUBLECOMPLEX  *) plan->Q4) + b,
@@ -209,7 +214,9 @@ void fftx_execute_1d_default(
           direction
         );
       }
+      PROFILE_STOP();
 
+      PROFILE_START();
       double *stg2_output = (double *) plan->Q3;
       double *stg3_input  = (double *) plan->Q4;
       if (plan->is_embed) {
@@ -219,6 +226,9 @@ void fftx_execute_1d_default(
         // no permutation necessary, use previous output as input.
         stg3_input = stg2_output;
       }
+      PROFILE_STOP();
+
+      PROFILE_START();
       // [Y, X'/px, Z] (no permutation on last stage)
       for (int b = 0; b < plan->b; ++b) {
         DEVICE_FFT_EXECZ2Z(
@@ -228,6 +238,7 @@ void fftx_execute_1d_default(
           direction
         );
       }
+      PROFILE_STOP();
     } else {
       //forward real
       // [X', Z/p, Y, b] <= [Z/p, Y, X, b]

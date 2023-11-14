@@ -99,13 +99,10 @@ fftx_plan fftx_plan_distributed_default(int r, int c, int M, int N, int K, int b
 }
 
 void fftx_execute_default(fftx_plan plan, double* out_buffer, double*in_buffer, int direction) {
-  // int rank = -1;
-  // MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  // double start, stop, max_time;
-  // if (rank == 0) { printf("%f,", -1.0); }
+  PROFILING_INIT();
 
   if (direction == DEVICE_FFT_FORWARD) {
-    // start = MPI_Wtime();
+    PROFILE_START();
     if (plan->is_complex) {
       for (int i = 0; i != plan->b; ++i) {
         DEVICE_FFT_EXECZ2Z(plan->stg1, ((DEVICE_FFT_DOUBLECOMPLEX  *) in_buffer + i), ((DEVICE_FFT_DOUBLECOMPLEX  *) plan->Q3 + i), direction);
@@ -115,29 +112,30 @@ void fftx_execute_default(fftx_plan plan, double* out_buffer, double*in_buffer, 
         DEVICE_FFT_EXECD2Z(plan->stg1, ((DEVICE_FFT_DOUBLEREAL  *) in_buffer + i), ((DEVICE_FFT_DOUBLECOMPLEX  *) plan->Q3 + i));
       }
     }
-    // stop = MPI_Wtime();
-    // max_time = max_diff(start, stop, MPI_COMM_WORLD);
-    // if (rank == 0) { printf("%f,", max_time); }
+    DEVICE_SYNCHRONIZE();
+    PROFILE_STOP();
 
+    PROFILE_START();
     fftx_mpi_rcperm(plan, plan->Q4, plan->Q3, FFTX_MPI_EMBED_1, plan->is_embed);
+    PROFILE_STOP();
 
-    // start = MPI_Wtime();
+    PROFILE_START();
     for (int i = 0; i != plan->b; ++i) {
       DEVICE_FFT_EXECZ2Z(plan->stg2, ((DEVICE_FFT_DOUBLECOMPLEX  *) plan->Q4 + i), ((DEVICE_FFT_DOUBLECOMPLEX  *) plan->Q3 + i), direction);
     }
-    // stop = MPI_Wtime();
-    // max_time = max_diff(start, stop, MPI_COMM_WORLD);
-    // if (rank == 0) { printf("%f,", max_time); }
+    DEVICE_SYNCHRONIZE();
+    PROFILE_STOP();
 
+    PROFILE_START();
     fftx_mpi_rcperm(plan, plan->Q4, plan->Q3, FFTX_MPI_EMBED_2, plan->is_embed);
+    PROFILE_STOP();
 
-    // start = MPI_Wtime();
+    PROFILE_START();
     for (int i = 0; i != plan->b; ++i) {
       DEVICE_FFT_EXECZ2Z(plan->stg3, ((DEVICE_FFT_DOUBLECOMPLEX  *) plan->Q4 + i), ((DEVICE_FFT_DOUBLECOMPLEX  *) out_buffer + i), direction);
     }
-    // stop = MPI_Wtime();
-    // max_time = max_diff(start, stop, MPI_COMM_WORLD);
-    // if (rank == 0) { printf("%f,", max_time); }
+    DEVICE_SYNCHRONIZE();
+    PROFILE_STOP();
 
   } else if (direction == DEVICE_FFT_INVERSE) {
     for (int i = 0; i != plan->b; ++i) {
